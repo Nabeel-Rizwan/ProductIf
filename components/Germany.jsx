@@ -9,7 +9,7 @@ const App = () => {
   const [expandedJob, setExpandedJob] = useState(null);
   const [isRemote, setIsRemote] = useState(null);
   const [location, setLocation] = useState('');
-  const [jobType, setJobType] = useState('');
+  const [jobTitle, setJobTitle] = useState('');
 
   const stripHtmlTags = (text) => {
     return text.replace(/<\/?[^>]+(>|$)/g, "");
@@ -46,8 +46,8 @@ const App = () => {
       filtered = filtered.filter(job => job.location.toLowerCase().includes(location.toLowerCase()));
     }
 
-    if (jobType) {
-      filtered = filtered.filter(job => job.job_types.includes(jobType));
+    if (jobTitle) {
+      filtered = filtered.filter(job => job.title.includes(jobTitle));
     }
 
     setFilteredJobs(filtered);
@@ -162,12 +162,12 @@ const App = () => {
             onChangeText={setLocation}
           />
 
-          <Text style={styles.modalLabel}>Job Type:</Text>
+          <Text style={styles.modalLabel}>Job Title:</Text>
           <TextInput
             style={styles.input}
             placeholder="Enter job type"
-            value={jobType}
-            onChangeText={setJobType}
+            value={jobTitle}
+            onChangeText={setJobTitle}
           />
 
           <TouchableOpacity style={styles.applyButton} onPress={applyFilters}>
