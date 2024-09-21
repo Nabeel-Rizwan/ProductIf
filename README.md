@@ -6,6 +6,14 @@ The app provides an industrial and professional look. Additionally, the app incl
 
 ## Demo
 
+<video width="320" height="240" controls>
+  <source src="https://github.com/user-attachments/assets/f0a18c00-f121-4486-be29-a0f6ad4b89db" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
+
+
+
+
 <img src="https://github.com/user-attachments/assets/8030c6bf-06db-4975-808b-0607a114f4df" alt="Sample Image" width="200" />
 
 <img src="https://github.com/user-attachments/assets/88081e55-bc90-404f-84b9-43e6a2f1eed0" alt="Sample Image" width="200" />
