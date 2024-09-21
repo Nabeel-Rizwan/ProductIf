@@ -15,8 +15,6 @@ It provides filtering options with industrial UI. Additionally, the app includes
 
 <img src="https://github.com/user-attachments/assets/95cfc69a-4abc-4beb-89fd-15ec0d9ff0a6" alt="Sample Image" width="300" />
 
-<img src="https://github.com/user-attachments/assets/95cfc69a-4abc-4beb-89fd-15ec0d9ff0a6" alt="Sample Image" width="300" />
-
 <img src="https://github.com/user-attachments/assets/15b207db-f7ff-4754-93ef-f62070da33c1" alt="Sample Image" width="300" />
 
 <img src="https://github.com/user-attachments/assets/af02a4ec-f284-4b17-bca3-12cbe2658ded" alt="Sample Image" width="300" />
