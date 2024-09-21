@@ -29,4 +29,12 @@ The app provides an industrial and professional look. Additionally, the app incl
 - Install Expo
 - Build Project: npx create-expo-app app --template
 - Download React Dependencies
-- Update the code with a Job API for fetching of jobs. API used here is https://developer.adzuna.com/
+- Update the code with a Job API for fetching jobs. API used here is https://developer.adzuna.com/
+
+## Features
+
+- Smooth and Secure App
+- Professional Look
+- Filter Option for Faster Job Finding
+- Job Insights by Fetching Top 5 Companies Hiring a Talent
+- Get Functionalities for UK, USA, and Germany.
