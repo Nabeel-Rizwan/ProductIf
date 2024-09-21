@@ -1,126 +1,120 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, Linking, StyleSheet, ActivityIndicator, SafeAreaView, Modal, TextInput, Button } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, FlatList, TextInput, Image, ScrollView, StyleSheet, ActivityIndicator, TouchableOpacity, Linking, Modal, Button, SafeAreaView } from 'react-native';
+import axios from 'axios';
 
-const App = () => {
+const JobList = () => {
   const [jobs, setJobs] = useState([]);
   const [filteredJobs, setFilteredJobs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [locationFilter, setLocationFilter] = useState('');
+  const [minSalary, setMinSalary] = useState('');
+  const [maxSalary, setMaxSalary] = useState('');
+  const [page, setPage] = useState(1);
+  const [isMore, setIsMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [error, setError] = useState(null);
   const [filterVisible, setFilterVisible] = useState(false);
-  const [expandedJob, setExpandedJob] = useState(null);
-  const [isRemote, setIsRemote] = useState(null);
-  const [location, setLocation] = useState('');
-  const [jobTitle, setJobTitle] = useState('');
-
-  const stripHtmlTags = (text) => {
-    return text.replace(/<\/?[^>]+(>|$)/g, "");
-  };
+  const [expandedItems, setExpandedItems] = useState({});
+  const scrollViewRef = useRef(null);
 
   useEffect(() => {
-    const fetchJobs = async () => {
-      try {
-        const response = await fetch('https://arbeitnow.com/api/job-board-api');
-        const data = await response.json();
-        setJobs(data.data);
-        setFilteredJobs(data.data);
-        setLoading(false);
-      } catch (error) {
-        console.error('Error fetching jobs:', error);
-      }
-    };
-    
     fetchJobs();
-  }, []);
+  }, [page]);
 
-  const openJobUrl = (url) => {
-    Linking.openURL(url).catch(err => console.error('An error occurred', err));
+  const fetchJobs = async (isLoadMore = false) => {
+    try {
+      if (!isLoadMore) setLoading(true);
+      setError(null);
+
+      const API_ID=`${process.env.EXPO_PUBLIC_API_ID}`;
+      const API_KEY=`${process.env.EXPO_PUBLIC_API_KEY}`;
+      
+      const response = await axios.get(`http://api.adzuna.com/v1/api/jobs/de/search/${page}`, {
+        params: {
+          app_id: API_ID,
+          app_key: API_KEY,
+          results_per_page: 20,
+          what: searchTerm,
+          where: locationFilter,
+          'content-type': 'application/json',
+        },
+      });
+
+      const jobsData = response.data.results;
+
+      if (isLoadMore) {
+        setJobs((prevJobs) => [...prevJobs, ...jobsData]);
+        setFilteredJobs((prevJobs) => [...prevJobs, ...jobsData]);
+      } else {
+        setJobs(jobsData);
+        setFilteredJobs(jobsData);
+      }
+
+      if (jobsData.length < 20) setIsMore(false);
+
+    } catch (err) {
+      setError(err.message || 'Error fetching jobs');
+    } finally {
+      if (!isLoadMore) setLoading(false);
+      setLoadingMore(false);
+    }
   };
 
-  const applyFilters = () => {
-    let filtered = jobs;
-
-    if (isRemote !== null) {
-      filtered = filtered.filter(job => job.remote === isRemote);
-    }
-
-    if (location) {
-      filtered = filtered.filter(job => job.location.toLowerCase().includes(location.toLowerCase()));
-    }
-
-    if (jobTitle) {
-      filtered = filtered.filter(job => job.title.includes(jobTitle));
-    }
-
-    setFilteredJobs(filtered);
+  const handleFilter = () => {
+    setPage(1);
+    setIsMore(true);
+    setJobs([]);
+    setFilteredJobs([]);
+    fetchJobs();
     setFilterVisible(false);
   };
 
-  const toggleJobExpansion =  (slug) => {
-    if (expandedJob === slug) {
-       setExpandedJob(null);
-    } else {
-       setExpandedJob(slug);
+  const handleShowMore = () => {
+    setLoadingMore(true);
+    setPage(page + 1);
+    if (scrollViewRef.current) {
+      scrollViewRef.current.scrollToOffset({ offset: 0, animated: true });
     }
   };
 
-  const renderJobItem = ({ item }) => (
-    <TouchableOpacity activeOpacity={1} style={styles.jobItem}>
-      
-      <Text style={styles.Post}>Job Title</Text>
-      <Text style={styles.jobTitle}>{item.title}</Text>
+  const handleJobPress = (url) => {
+    Linking.openURL(url).catch(err => console.error("Couldn't load page", err));
+  };
 
-      <Text style={styles.Post}>Company Name</Text>
-      <Text style={styles.jobTitle}>{item.company_name}</Text>
+  const API_Redirect=()=>{
+    Linking.openURL('http://www.adzuna.co.uk');
+  }
 
-      <Text style={styles.Post}>Location</Text>
-      <Text style={styles.jobTitle}>{item.location}</Text>
+  const toggleExpand = (id) => {
+    setExpandedItems((prevState) => ({
+      ...prevState,
+      [id]: !prevState[id],
+    }));
+  };
 
-      {item.job_types.length > 0 && (
-        <View style={styles.jobTypeContainer}>
-          {item.job_types.map((type, index) => (
-            <Text key={index} style={styles.jobType}>{type}</Text>
-          ))}
-        </View>
-      )}
-
-      <View style={styles.remoteContainer}>
-        {item.remote ? <Text style={styles.remoteText}>Remote: Yes</Text> : <Text style={styles.remoteText}>Remote: No</Text>}
-      </View>
-
-      <TouchableOpacity
-        style={styles.applyButton}
-        onPress={() => openJobUrl(item.url)}
-      >
-        <Text style={styles.applyButtonText}>Apply Now</Text>
-      </TouchableOpacity>
-
-      {expandedJob === item.slug ? (
-        <View style={styles.expandedView}>
-          <Text style={styles.Post}>Job Description</Text>
-          <Text style={styles.jobDescription}>{stripHtmlTags(item.description)}</Text>
-          <TouchableOpacity onPress={() => toggleJobExpansion(item.slug)}>
-            <Text style={styles.expandButtonText}>Show Less</Text>
-          </TouchableOpacity>
-        </View>
-      ) : (
-        <TouchableOpacity onPress={() => toggleJobExpansion(item.slug)}>
-          <Text style={styles.expandButtonText}>Show More</Text>
-        </TouchableOpacity>
-      )}
-    </TouchableOpacity>
-  );
-
-  if (loading) {
-    return (
+  if (loading && page === 1) {
+    return(
       <View style={styles.loading}>
         <ActivityIndicator size="large" color="#0056a0" />
         <Text style={styles.loadingText}>Loading Jobs...</Text>
       </View>
+    )
+  }
+
+  if (error) {
+    return (
+      <View>
+        <Text>Error fetching jobs: {error}</Text>
+        <TouchableOpacity onPress={fetchJobs}>Reload</TouchableOpacity>
+      </View>
     );
   }
 
+  
+
   return (
     <SafeAreaView style={styles.container}>
-
       <TouchableOpacity
         style={styles.filterButton}
         onPress={() => setFilterVisible(true)}
@@ -129,10 +123,73 @@ const App = () => {
       </TouchableOpacity>
 
       <FlatList
+        ref={scrollViewRef} contentContainerStyle={{ flexGrow: 1 }}
         data={filteredJobs}
-        renderItem={renderJobItem}
-        keyExtractor={item => item.slug}
-        contentContainerStyle={styles.listContainer}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={({ item }) => (
+          <View style={styles.jobItem}>
+            <Text style={styles.Post}>Job Title</Text>
+            <Text style={styles.jobTitle}>{item.title}</Text>
+            <Text style={styles.Post}>Company Name</Text>
+            <Text style={styles.jobTitle}>{item.company.display_name}</Text>
+            <Text style={styles.Post}>Location</Text>
+            <Text style={styles.jobTitle}>{item.location.display_name}</Text>
+            <Text style={styles.Post}>Salary</Text>
+            <Text style={styles.jobTitle}>
+              {item.salary_min ? `${item.salary_min} - ${item.salary_max}` : 'Not specified'}
+            </Text>
+
+          <View style={styles.logoContainer}>
+          <TouchableOpacity onPress={API_Redirect}><Text style={styles.LogoText}>Jobs by</Text></TouchableOpacity>
+         
+          <Image style={styles.tinyLogo} source={{
+          uri: 'https://zunastatic-abf.kxcdn.com/images/global/landing/press/logo_normal.png',
+        }} />
+        </View>
+
+            {expandedItems[item.id] ? (
+              <View style={styles.expandedView}>
+                <Text style={styles.Post}>Job Description</Text>
+                <Text style={styles.jobDescription}>{item.description}</Text>
+                <TouchableOpacity
+                  style={styles.expandButton}
+                  onPress={() => toggleExpand(item.id)}
+                >
+                  <Text style={styles.expandButtonText}>Show Less</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <TouchableOpacity
+                style={styles.expandButton}
+                onPress={() => toggleExpand(item.id)}
+              >
+                <Text style={styles.expandButtonText}>Show More</Text>
+              </TouchableOpacity>
+            )}
+
+
+            <TouchableOpacity
+              style={styles.applyButton}
+              onPress={() => handleJobPress(item.redirect_url)}
+            >
+              <Text style={styles.applyButtonText}>Apply Now</Text>
+            </TouchableOpacity>
+
+            
+
+          </View>
+        )}
+        ListFooterComponent={() =>
+          isMore && (
+            <TouchableOpacity style={styles.showMoreButton} onPress={handleShowMore}>
+              {loadingMore ? (
+                <ActivityIndicator size="small" color="#0056a0" />
+              ) : (
+                <Text style={styles.white}>Next</Text>
+              )}
+            </TouchableOpacity>
+          )
+        }
       />
 
       <Modal
@@ -143,34 +200,38 @@ const App = () => {
       >
         <View style={styles.modalView}>
           <Text style={styles.modalTitle}>Filter Jobs</Text>
-
-          <Text style={styles.modalLabel}>Remote:
-          {isRemote === false ? <Text> No</Text> : isRemote === true ? <Text> Yes</Text> : <Text> Any</Text>}
-          </Text>
-
-          <View style={styles.filterOption}>
-            <TouchableOpacity style={styles.Button} title="Any" onPress={() => setIsRemote(null)} ><Text style={styles.buttonText}>Any</Text></TouchableOpacity>
-            <TouchableOpacity style={styles.Button} title="Yes" onPress={() => setIsRemote(true)} ><Text style={styles.buttonText}>Yes</Text></TouchableOpacity>
-            <TouchableOpacity style={styles.Button} title="No" onPress={() => setIsRemote(false)} ><Text style={styles.buttonText}>No</Text></TouchableOpacity>
-          </View>
-
+          <Text style={styles.modalLabel}>Job Title:</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter job title"
+            value={searchTerm}
+            onChangeText={setSearchTerm}
+          />
           <Text style={styles.modalLabel}>Location:</Text>
           <TextInput
             style={styles.input}
             placeholder="Enter location"
-            value={location}
-            onChangeText={setLocation}
+            value={locationFilter}
+            onChangeText={setLocationFilter}
           />
-
-          <Text style={styles.modalLabel}>Job Title:</Text>
+          <Text style={styles.modalLabel}>Min Salary:</Text>
           <TextInput
             style={styles.input}
-            placeholder="Enter job type"
-            value={jobTitle}
-            onChangeText={setJobTitle}
+            placeholder="Enter min salary"
+            value={minSalary}
+            onChangeText={setMinSalary}
+            keyboardType="numeric"
+          />
+          <Text style={styles.modalLabel}>Max Salary:</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter max salary"
+            value={maxSalary}
+            onChangeText={setMaxSalary}
+            keyboardType="numeric"
           />
 
-          <TouchableOpacity style={styles.applyButton} onPress={applyFilters}>
+          <TouchableOpacity style={styles.applyButton} onPress={handleFilter}>
             <Text style={styles.applyButtonText}>Apply Filters</Text>
           </TouchableOpacity>
 
@@ -183,26 +244,50 @@ const App = () => {
   );
 };
 
-export default App;
-
 const styles = StyleSheet.create({
-  
-  Button:{
-    marginTop:8,
-    paddingTop:3,
-    paddingBottom:3,
-    paddingRight:20,
-    paddingLeft:20,
-    backgroundColor:'#f4f4f4',
-    borderRadius:5,
+
+logoContainer:{
+  marginTop:20,
+  flexDirection: 'row',
+},
+
+LogoText: {
+  fontSize: 14,
+  fontFamily: 'DMRegular',
+  color: '#333',
+  marginBottom: 10,
+},
+
+white:{
+  color:'white',
+  fontFamily:"DMRegular",
+},
+
+  tinyLogo:{
+    marginTop:10,
+    width: 116, 
+    height: 23,
+    resizeMode:'cover', 
+    marginLeft:10,
+    marginRight:10,
+    marginBottom:30,
   },
+  
   container: {
     flex: 1,
     paddingTop: 20,
     backgroundColor: '#f4f4f4',
   },
-  listContainer: {
-    paddingBottom: 20,
+  loading: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+  },
+  loadingText: {
+    fontSize: 18,
+    color: '#0056a0',
+    marginTop: 10,
   },
   jobItem: {
     backgroundColor: '#ffffff',
@@ -222,83 +307,44 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontFamily: 'DMRegular',
     color: '#333',
-    marginBottom: 15,
+    marginBottom: 10,
   },
   jobTitle: {
     fontSize: 14,
     fontFamily: 'DMRegular',
     color: 'grey',
-    marginBottom: 30,
+    marginBottom: 15,
   },
-  jobTypeContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginVertical: 10,
-  },
-  jobType: {
-    backgroundColor: '#e1e1e1',
-    borderRadius: 20,
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    marginRight: 10,
-    marginBottom: 8,
-    fontSize: 12,
-    color: '#333',
-  },
-  remoteContainer: {
-    marginVertical: 8,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: '#0056a0',
-    alignItems: 'center',
-  },
-  remoteText: {
+  jobDescription: {
     fontSize: 14,
-    color: 'white',
+    color: '#555',
+    marginBottom: 15,
+  },
+  expandButton: {
+    backgroundColor: '#0056a0',
+    paddingVertical: 8,
+    borderRadius: 20,
+    alignItems: 'center',
+    marginBottom: 10,
+    marginTop: 20,
+  },
+  expandButtonText: {
+    color: '#fff',
+    fontSize: 14,
   },
   applyButton: {
     backgroundColor: '#28a745',
     paddingVertical: 10,
-    paddingHorizontal: 15,
     borderRadius: 25,
-    marginTop: 6,
+    marginBottom: 10,
     alignItems: 'center',
-    fontFamily: 'DMRegular',
   },
   applyButtonText: {
+    fontFamily:"DMRegular",
     color: '#fff',
     fontSize: 16,
   },
-  expandedView: {
-    marginTop: 10,
-    padding: 20,
-    backgroundColor: '#f2f2f2',
-    borderRadius: 8,
-  },
-  jobDescription: {
-    fontSize: 14,
-    color: '#333',
-    marginBottom: 20,
-  },
-  expandButtonText: {
-    color: '#0056a0',
-    fontSize: 14,
-    textAlign: 'center',
-    marginTop:20,
-  },
-  loading: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-  },
-  loadingText: {
-    fontSize: 18,
-    color: '#0056a0',
-    marginTop: 10,
-  },
   filterButton: {
-    fontFamily: 'DMRegular',
     backgroundColor: '#0056a0',
     paddingVertical: 12,
     paddingHorizontal: 20,
@@ -310,6 +356,14 @@ const styles = StyleSheet.create({
   filterText: {
     color: '#fff',
     fontSize: 16,
+  },
+  showMoreButton: {
+    margin:20,
+    padding: 10,
+    backgroundColor: '#0056a0',
+    borderRadius: 5,
+    alignItems: 'center',
+    marginBottom: 20,
   },
   modalView: {
     backgroundColor: 'white',
@@ -335,11 +389,6 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     marginBottom: 10,
   },
-  filterOption: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginBottom: 20,
-  },
   input: {
     borderColor: '#ddd',
     borderWidth: 1,
@@ -350,14 +399,16 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   cancelButton: {
-    marginTop:20,
     backgroundColor: '#f44336',
     paddingVertical: 10,
     borderRadius: 25,
     alignItems: 'center',
   },
   cancelButtonText: {
-    color: 'white',
+    color: '#fff',
     fontSize: 16,
+    fontWeight: 'bold',
   },
 });
+
+export default JobList;

@@ -74,8 +74,10 @@ const JobList = () => {
   const handleShowMore = () => {
     setLoadingMore(true);
     setPage(page + 1);
-    scrollViewRef.current?.scrollTo({ y: 0, animated: false });
-  };
+    if (scrollViewRef.current) {
+      scrollViewRef.current.scrollToOffset({ offset: 0, animated: true });
+    }
+    };
 
   const handleJobPress = (url) => {
     Linking.openURL(url).catch(err => console.error("Couldn't load page", err));
@@ -118,7 +120,7 @@ const JobList = () => {
         <Text style={styles.filterText}>Filter Jobs</Text>
       </TouchableOpacity>
 
-      <FlatList
+      <FlatList ref={scrollViewRef} contentContainerStyle={{ flexGrow: 1 }}
         data={filteredJobs}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
@@ -175,7 +177,7 @@ const JobList = () => {
               {loadingMore ? (
                 <ActivityIndicator size="small" color="#0056a0" />
               ) : (
-                <Text>Next</Text>
+                <Text style={styles.white}>Next</Text>
               )}
             </TouchableOpacity>
           )
@@ -235,6 +237,11 @@ const JobList = () => {
 };
 
 const styles = StyleSheet.create({
+
+  white:{
+color:"white",
+fontFamily:"DMRegular",
+  },
 
     LogoText: {
         fontSize: 14,
@@ -340,6 +347,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   showMoreButton: {
+    margin:20,
     padding: 10,
     backgroundColor: '#0056a0',
     borderRadius: 5,
