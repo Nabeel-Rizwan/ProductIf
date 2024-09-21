@@ -1,7 +1,7 @@
 # Job Search App Developed Through React Native
 
-ProductIf app provides jobs in the Uk, USA and Germany with filter functionality by fetching it through an API. 
-It provides filtering options with industrial UI. Additionally, the app includes Job Insight data provided through API which helps to fetch Top 5 companies hiring for a job role helping candidates navigate better. The app requires no Signin/ Signout, reducing the time for searching jobs.
+ProductIf app provides list of jobs from the UK, USA and Germany with filter functionality by fetching it through an API. 
+The app provides an industrial and professional look. Additionally, the app includes Job Insight data provided through API which helps to fetch Top 5 companies hiring for a job role helping candidates navigate better. There is no Signin or Registration process for the app, helping users to focus on job hunt.
 
 
 ## Demo
