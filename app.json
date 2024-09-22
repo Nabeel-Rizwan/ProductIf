@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "app",
-    "slug": "app",
+    "slug": "productif",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -36,8 +36,9 @@
     },
     "extra": {
       "eas": {
-        "projectId": "7594db28-5483-4dec-a332-e3246d6b7068"
+        "projectId": "988d928f-6551-42c7-9513-f8c73c43f0d1"
       }
-    }
+    },
+    "owner": "nabeel-r"
   }
 }

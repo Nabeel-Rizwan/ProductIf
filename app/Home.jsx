@@ -115,7 +115,7 @@ export default function Home({ navigation }) {
           ref={scrollViewRef}
         >
           {images.map((image) => (
-            <TouchableOpacity key={image.id} onPress={() => handleImagePress(image)} style={styles.slide}>
+            <TouchableOpacity activeOpacity={1} key={image.id} onPress={() => handleImagePress(image)} style={styles.slide}>
               <Image source={image.src} style={styles.image} />
               <Text style={styles.label}>{image.label}</Text>
             </TouchableOpacity>

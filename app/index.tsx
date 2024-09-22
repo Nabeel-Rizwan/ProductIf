@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { View, StyleSheet, Button } from 'react-native';
 import { Stack } from 'expo-router';
@@ -9,9 +10,13 @@ import Home from '../app/Home';
 import UK_Statistics from '../components/UK_Statistics';
 import US_Statistics from '../components/US_Statistics';
 import US from '../components/US';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { NavigationContainer } from '@react-navigation/native';
 import Germany_Statistics from '../components/Germany_Statistics';
 
+
 const Drawer = createDrawerNavigator();
+const Tab = createBottomTabNavigator();
 
 const Index = () => {
 
@@ -43,7 +48,8 @@ const Index = () => {
       <Drawer.Screen name="Top US Companies Hiring" component={US_Statistics} />
 </Drawer.Navigator>
 
-   
+
+
     </>
   );
 };
@@ -89,4 +95,5 @@ const styles = StyleSheet.create({
       alignItems: 'center',
     },
   });
+
   
